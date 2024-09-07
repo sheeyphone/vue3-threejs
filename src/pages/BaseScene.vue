@@ -1,6 +1,6 @@
 <script setup>
+import {THREE} from '../utils/createThreeView'
 import {ref, computed, onMounted, onUnmounted} from 'vue'
-import * as THREE from 'three'
 
 /* Window size */
 const windowSize = ref({

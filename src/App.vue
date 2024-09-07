@@ -11,7 +11,7 @@ const isCurrentRoute = name => {
 
 <template>
   <div class="flex w-full h-full">
-    <div class="w-[200px] relative h-full">
+    <div class="w-[200px] relative h-full border-r border-gray-200">
       <simplebar class="w-full h-full">
         <div class="select-none">
           <router-link v-for="(item, i) in routes" :key="i" :to="{name: item.name}">

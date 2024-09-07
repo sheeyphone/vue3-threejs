@@ -1,21 +1,23 @@
 <script setup>
 import {onMounted} from 'vue'
-import * as THREE from 'three'
+import {MeshLine, MeshLineGeometry, MeshLineMaterial} from '@lume/three-meshline'
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
-import {createThreeView} from '../utils/createThreeView'
+import {createThreeView, THREE} from '../utils/createThreeView'
 import {getFresnelMat} from '../utils/getFresnelMat'
+import lineFragment from '../glsl/shaders/line/LineFragment.glsl'
+import lineVertex from '../glsl/shaders/line/LineVertex.glsl'
 
-function getCartesianCoordinates(lat, lon) {
+function getCartesianCoordinates(lat, lon, radius = 1) {
   const latRad = (lat * Math.PI) / 180
   const lonRad = (lon * Math.PI) / 180
-  const y = Math.sin(latRad)
-  const x = Math.cos(latRad) * -Math.cos(lonRad)
-  const z = Math.cos(latRad) * Math.sin(lonRad)
+  const y = Math.sin(latRad) * radius
+  const x = Math.cos(latRad) * -Math.cos(lonRad) * radius
+  const z = Math.cos(latRad) * Math.sin(lonRad) * radius
   return {x, y, z}
 }
 
 function addEarthGroup(scene) {
-  let earthGroup, earthMesh, lightsMesh, glowMesh, sunLight, testMesh
+  let earthGroup, earthMesh, lightsMesh, glowMesh, sunLight, lineMesh
 
   const loader = new THREE.TextureLoader()
   const detail = 16
@@ -27,12 +29,23 @@ function addEarthGroup(scene) {
     earthMesh = __addEarth(earthGroup)
     lightsMesh = __addLightMesh(earthGroup)
     glowMesh = __addGlow(earthGroup)
-    testMesh = __test(earthGroup)
+    lineMesh = __addFlyLine(earthGroup)
   }
-  function __test(earthGroup) {
+  function onAnimate(t) {
+    // earthMesh.rotation.y += 0.002
+    // lightsMesh.rotation.y += 0.002
+    // glowMesh.rotation.y += 0.002
+    // lineMesh.rotation.y += 0.002
+
+    if (lineMesh.material.uniforms.dashOffset.value < -2) {
+      lineMesh.material.uniforms.dashOffset.value = 0
+    }
+    lineMesh.material.uniforms.dashOffset.value -= 0.01
+  }
+  function __addFlyLine(earthGroup) {
     const pt1 = getCartesianCoordinates(23, 113)
-    const pt2 = getCartesianCoordinates(38, 123)
-    const curveSize = 1.2
+    const pt2 = getCartesianCoordinates(38, 117)
+    const curveSize = 1.15
     const curve = new THREE.QuadraticBezierCurve3(
       new THREE.Vector3(pt1.x, pt1.y, pt1.z),
       new THREE.Vector3(
@@ -42,18 +55,33 @@ function addEarthGroup(scene) {
       ),
       new THREE.Vector3(pt2.x, pt2.y, pt2.z),
     )
-    const points = curve.getPoints(50)
-    const geometry = new THREE.BufferGeometry().setFromPoints(points)
-    const material = new THREE.LineBasicMaterial({color: 0xff0000})
-    const curveObject = new THREE.Line(geometry, material)
+    const geometry = new MeshLineGeometry()
+    const points = []
+    curve.getPoints(20).forEach(vec3 => {
+      points.push(vec3.x, vec3.y, vec3.z)
+    })
+    geometry.setPoints(points)
+
+    const material = new MeshLineMaterial({
+      lineWidth: 0.008,
+      dashArray: 2,
+      dashOffset: 0,
+      dashRatio: 0.5,
+      transparent: true,
+      color: 0xffff00,
+      opacity: 0.4,
+    })
+    // const material = new THREE.ShaderMaterial({
+    //   uniforms: {
+    //     uTime: {value: 0},
+    //   },
+    //   vertexShader: lineVertex,
+    //   fragmentShader: lineFragment,
+    //   transparent: true,
+    // })
+    const curveObject = new MeshLine(geometry, material)
     earthGroup.add(curveObject)
     return curveObject
-  }
-  function onAnimate() {
-    // earthMesh.rotation.y += 0.002
-    // lightsMesh.rotation.y += 0.002
-    // glowMesh.rotation.y += 0.002
-    // testMesh.rotation.y += 0.002
   }
   function __addEarthGroup() {
     const earthGroup = new THREE.Group()
@@ -64,10 +92,10 @@ function addEarthGroup(scene) {
   }
   function __addEarth(earthGroup) {
     const material = new THREE.MeshPhongMaterial({
-      map: loader.load('./earth/textures/00_earthmap4k.jpg'),
+      map: loader.load('./earth/textures/00_earth_dot_4k.jpg'),
       specularMap: loader.load('./earth/textures/02_earthspec1k.jpg'),
-      bumpMap: loader.load('./earth/textures/01_earthbump1k.jpg'),
-      bumpScale: 0.04,
+      // bumpMap: loader.load('./earth/textures/01_earthbump1k.jpg'),
+      // bumpScale: 0.04,
     })
     const earthMesh = new THREE.Mesh(geometry, material)
     earthGroup.add(earthMesh)
@@ -135,7 +163,7 @@ onMounted(() => {
       scene.background = new THREE.Color(0x000000)
     },
     onCamera: camera => {
-      camera.position.z = 4
+      camera.position.z = 2
     },
     onRenderer: renderer => {
       renderer.toneMapping = THREE.ACESFilmicToneMapping

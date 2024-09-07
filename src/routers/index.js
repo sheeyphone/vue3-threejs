@@ -25,6 +25,12 @@ const routes = [
     path: '/EarthView',
     component: () => import('../pages/EarthView.vue'),
   },
+  {
+    name: 'RadarPlane',
+    title: 'Radar Plane',
+    path: '/RadarPlane',
+    component: () => import('../pages/RadarPlane.vue'),
+  },
 ]
 const router = createRouter({
   history: createWebHashHistory(),

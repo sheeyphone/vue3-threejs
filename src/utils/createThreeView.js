@@ -1,4 +1,6 @@
-import * as THREE from 'three'
+import * as three from 'three'
+
+export const THREE = three
 
 export const createThreeView = (containerId, canvasId, {onCreated, onScene, onCamera, onRenderer, onAll}) => {
   const DPR = window.devicePixelRatio
@@ -25,7 +27,7 @@ export const createThreeView = (containerId, canvasId, {onCreated, onScene, onCa
   function __initThree(onScene, onCamera) {
     scene = new THREE.Scene()
     if (onScene) onScene(scene)
-    camera = new THREE.PerspectiveCamera(75, WIDTH / HEIGHT, 0.1, 1000)
+    camera = new THREE.PerspectiveCamera(75, WIDTH / HEIGHT, 0.01, 1000)
     if (onCamera) onCamera(camera)
     renderer = new THREE.WebGLRenderer({antialias: true, alpha: true, canvas})
     if (onRenderer) onRenderer(renderer)
