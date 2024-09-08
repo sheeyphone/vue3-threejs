@@ -4,7 +4,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
 import {createThreeView, THREE} from '../utils/createThreeView'
 import baseVertex from '../glsl/shaders/BaseVertex.glsl'
 import baseFragment from '../glsl/shaders/BaseFragment.glsl'
-import BasicImage from '../assets/00_earth_dot_4k.png'
+import BasicImage from '../assets/00_earth_black_4k.png'
 
 function addSphere(scene, camera) {
   let sphereMesh
@@ -13,9 +13,16 @@ function addSphere(scene, camera) {
     const material = new THREE.ShaderMaterial({
       vertexShader: baseVertex,
       fragmentShader: baseFragment,
+      transparent: true,
+      side: THREE.DoubleSide,
     })
-    material.uniforms.uTexture = {
-      value: new THREE.TextureLoader().load(BasicImage),
+    material.uniforms = {
+      uTexture: {
+        value: new THREE.TextureLoader().load(BasicImage),
+      },
+      uCameraPosition: {
+        value: camera.position,
+      },
     }
     sphereMesh = new THREE.Mesh(geometry, material)
     scene.add(sphereMesh)
